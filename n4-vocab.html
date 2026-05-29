@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>日语专四单词背诵（中文 → 日文）</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:linear-gradient(135deg,#e0e5ec,#f5f7fa);
+  min-height:100vh;
+  display:flex;justify-content:center;align-items:center;
+}
+.container{
+  background:#fff;width:92%;max-width:560px;border-radius:18px;
+  box-shadow:0 16px 40px rgba(0,0,0,0.1);padding:32px 24px;text-align:center;
+}
+h1{font-size:22px;color:#1e293b;margin-bottom:6px}
+.sub{font-size:13px;color:#94a3b8;margin-bottom:18px}
+.progress{font-size:14px;color:#64748b;margin-bottom:16px}
+.card{
+  background:linear-gradient(135deg,#f1f5f9,#e2e8f0);
+  border-radius:14px;padding:32px 20px;margin-bottom:22px;
+  min-height:140px;display:flex;flex-direction:column;justify-content:center;
+}
+.chinese{font-size:28px;font-weight:700;color:#0f172a;margin-bottom:18px;line-height:1.4}
+.japanese{
+  font-size:26px;color:#2563eb;min-height:36px;
+  transition:opacity .3s;line-height:1.4;
+}
+.japanese.hidden{opacity:0;user-select:none}
+.japanese.visible{opacity:1}
+.btn{
+  border:none;border-radius:10px;padding:12px 20px;font-size:15px;
+  cursor:pointer;margin:6px;transition:transform .1s,box-shadow .15s;
+  font-weight:600;
+}
+.btn:active{transform:scale(.97)}
+.btn-show{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+.btn-prev{background:#94a3b8;color:#fff}
+.btn-next{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3)}
+.hint{font-size:12px;color:#94a3b8;margin-top:16px}
+.bar-wrap{width:100%;height:8px;background:#e2e8f0;border-radius:4px;margin-bottom:14px;overflow:hidden}
+.bar{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#10b981);border-radius:4px;transition:width .3s}
+.info{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.tag{
+  display:inline-block;background:#f1f5f9;color:#475569;font-size:12px;
+  padding:3px 10px;border-radius:6px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📘 日语专四单词背诵</h1>
+  <div class="sub">中文 → 日文 · 共 <span id="totalNum">0</span> 词</div>
+  <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+  <div class="info">
+    <div class="progress" id="progress"></div>
+    <div class="tag" id="posTag"></div>
+  </div>
+  <div class="card">
+    <div class="chinese" id="chinese">加载中…</div>
+    <div class="japanese hidden" id="japanese"></div>
+  </div>
+  <button class="btn btn-show" id="btnShow" onclick="showAnswer()">显示日文</button><br>
+  <button class="btn btn-prev" id="btnPrev" onclick="prevWord()">上一词</button>
+  <button class="btn btn-next" id="btnNext" onclick="nextWord()">下一词</button>
+  <div class="hint">提示：先看中文，尝试回忆日文，再点击「显示日文」</div>
+</div>
+
+<script>
+let words = [];
+let index = 0;
+const $ = id => document.getElementById(id);
+
+function render() {
+  if (!words.length) return;
+  const w = words[index];
+  $('chinese').textContent = w.cn;
+  $('japanese').textContent = w.jp;
+  $('japanese').classList.add('hidden');
+  $('progress').textContent = (index + 1) + ' / ' + words.length;
+  $('posTag').textContent = '#' + (index + 1);
+  $('bar').style.width = ((index + 1) / words.length * 100).toFixed(1) + '%';
+  $('btnPrev').disabled = index === 0;
+  $('btnNext').disabled = index === words.length - 1;
+}
+
+function showAnswer() {
+  $('japanese').classList.remove('hidden');
+}
+
+function prevWord() {
+  if (index > 0) { index--; render(); }
+}
+
+function nextWord() {
+  if (index < words.length - 1) { index++; render(); }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') nextWord();
+  if (e.key === 'ArrowLeft') prevWord();
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); showAnswer(); }
+});
+
+// Load words from external JSON (avoids inline-script size issues)
+fetch('words.json')
+  .then(r => { if (!r.ok) throw new Error('words.json not found'); return r.json(); })
+  .then(data => {
+    words = data;
+    $('totalNum').textContent = words.length;
+    render();
+  })
+  .catch(err => {
+    $('chinese').textContent = '加载失败';
+    $('japanese').textContent = err.message;
+    console.error(err);
+  });
+</script>
+</body>
+</html>
